@@ -1,0 +1,27 @@
+Vagrant.configure("2") do |config|
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = 1024
+    vb.cpus = 1
+  end
+
+  config.vm.box = "bento/debian-13"
+ # config.vm.box_version = "4.3.12"
+
+  config.vm.define "tbouzalmS" do |server|
+    server.vm.hostname = "tbouzalmS"
+    server.vm.network "private_network", ip: "192.168.56.110" # Static IP
+    server.vm.provision "shell", path: "scripts/server_script.sh"
+    server.vm.provider "virtualbox" do |vb|
+      vb.name  = "tbouzalmS"
+    end
+  end
+  config.vm.define "tbouzalmSW" do |server|
+    server.vm.hostname = "tbouzalmSW"
+    server.vm.network "private_network", ip: "192.168.56.111" # Static IP
+    server.vm.provision "shell", path: "scripts/server_worker_script.sh"
+    server.vm.provider "virtualbox" do |vb|
+      vb.name  = "tbouzalmSW"
+    end
+  end
+end
