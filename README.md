@@ -71,14 +71,48 @@ k8s can upgrade instances in a rolling fashion one at a time  and if a problem a
 
 `vagrant ssh-config` : display all the ssh details like username, key file location etc...
 `vagrant halt`: Stops the virtual machine by delivering a shutdown signal to the guest operating system. This command is similar to shutting down a real computer.
-Changed scripts → `vagrant provision`
 
-Changed resources/network → `vagrant reload`
+`vagrant provision` : Changed scripts
 
-Changed box or want a clean state → `vagrant destroy && vagrant up`
+`vagrant reload` : Changed resources/network
+
+`vagrant destroy && vagrant up` : Changed box or want a clean state
+
+`server.vm.provision "shell", path: "path_to_script"` Vagrant's `shell` provisioner runs scripts with `privileged: true`. This means the script is executed as the root user using sudo within the guest virtual machine.
+
+
+`private_network`: Creates a host-only network that allows:
+- VM-to-VM communication (your K3s nodes can talk to each other)
+- Host-to-VM communication (you can SSH from your host machine to the VMs)
+- VMs are isolated from external networks (secure sandbox environment)
+
+
+`ip: "192.168.56.110"`: Assigns a static IP address
+-  `192.168.56.0/24` is VirtualBox's default host-only network range
+- This ensures your VMs always get the same IP addresses across reboots
+
+`curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--token 12345 -i 192.168.56.110 " sh -s - `
+
+`-i 192.168.56.110`: Forces K3s to use this specific IP for:
+
+- API server binding (master node)
+- Node registration in the cluster
+- Inter-node communication
+
+
+
+Why is this important?
+
+- VMs typically have multiple network interfaces (NAT + private network)
+- Without -i, K3s might choose the wrong interface (like the NAT interface)
+- This ensures consistent, predictable networking
+
+
 ## References
+
 
 [Vagrant Tutorial For Beginners: Getting Started Guide](https://devopscube.com/vagrant-tutorial-beginners/)
 
+[Virtualization: Bridged, NAT, Host-only - Virtual machine connection types](https://www.youtube.com/watch?v=XCkKDWMYHME&t=98s)
 
-
+[How to specify Internal-IP for kubernetes worker node](https://medium.com/@kanrangsan/how-to-specify-internal-ip-for-kubernetes-worker-node-24790b2884fd)
