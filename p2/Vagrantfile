@@ -1,0 +1,23 @@
+Vagrant.configure("2") do |config|
+  config.env.enable
+
+  config.vm.box = ENV['VAGRANT_BOX']
+  config.vm.box_version = ENV['VAGRANT_BOX_VERSION']
+
+  $server_script = <<-SCRIPT
+    set -e
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='server --node-ip #{ENV["SERVER_IP"]} --write-kubeconfig-mode 644' sh -s -
+  SCRIPT
+
+  config.vm.define ENV["SERVER_NAME"] do |server|
+    server.vm.hostname = ENV["SERVER_NAME"]
+    server.vm.provider "virtualbox" do |vb|
+      vb.memory = ENV['VM_MEMORY']
+      vb.cpus = ENV['VM_CPUS']
+      vb.name  = ENV["SERVER_NAME"]
+    end
+    server.vm.network "private_network", ip: ENV["SERVER_IP"]
+    server.vm.provision "shell", inline: $server_script
+  end
+
+end
