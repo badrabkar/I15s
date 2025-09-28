@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-one
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: one
+  template:
+    metadata:
+      labels:
+        app: one
+    spec:
+      containers:
+        - name: app-one-container
+          image: traefik/whoami:v1.8.0
+          ports:
+            - containerPort: 80
+              name: app-one-port
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-one-svc
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: app-one-port
+  selector:
+    app: one

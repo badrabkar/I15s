@@ -1,15 +1,41 @@
 Vagrant.configure("2") do |config|
   config.env.enable
 
-  config.vm.box = ENV['VAGRANT_BOX']
-  config.vm.box_version = ENV['VAGRANT_BOX_VERSION']
-
   $server_script = <<-SCRIPT
     set -e
+    set -x
+    
+    if [ ! -f '/home/vagrant/.profile' ]; then
+      echo "alias k=kubectl" > /home/vagrant/.profile ; . /home/vagrant/.profile;
+    fi;
+
     curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='server --node-ip #{ENV["SERVER_IP"]} --write-kubeconfig-mode 644' sh -s -
+
+
+
+    # echo "Waiting for k3s API server to be ready..."
+
+    # until kubectl get --raw='/readyz' &>/dev/null; do
+    #   sleep 1
+    # done
+    
+    # echo "✅ k3s API server is ready!"
+
+    # kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=180s
+
+  
+    # kubectl create -f /vagrant/app-one-deployment.yml  -f /vagrant/app-two-deployment.yml  -f /vagrant/app-three-deployment.yml -v=6
+
+    # kubectl wait --for=condition=available deployment/app-one deployment/app-two deployment/app-three --timeout=120s
+
+    # kubectl create -f /vagrant/ingress-controller.yml -v=6
+
   SCRIPT
 
   config.vm.define ENV["SERVER_NAME"] do |server|
+    server.vm.box = ENV['VAGRANT_BOX']
+    server.vm.box_version = ENV['VAGRANT_BOX_VERSION']
+    config.vm.synced_folder ".", "/vagrant"
     server.vm.hostname = ENV["SERVER_NAME"]
     server.vm.provider "virtualbox" do |vb|
       vb.memory = ENV['VM_MEMORY']
