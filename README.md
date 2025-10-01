@@ -5,114 +5,49 @@ This project aims to introduce you to Kubernetes from a developer's perspective.
 
 
 
-# Part 1: K3s and Vagrant
+## Part 1: K3s and Vagrant
 
-- write you Vagrantfile using LTS of the distribution of your choice
+- Write you Vagrantfile using LTS of the distribution of your choice
 - 1 CPU and 512 or 1024 MB of RAM
 - VM-1 (server, controller node) ===> hostname: `tbouzalmS` , IP: 192.168.56.110 
 - VM-2 (serverworker, agent mode) ===> hostname: `tbouzalmSW` , IP: 192.168.56.111  
 - Be able to connect with SSH with no password.
--  You must install k3s on both machines
+- Install k3s on both machines
 
-controller mode
-agent mode
-server
-server worker
-k3s
+## Part 2: K3s and three simple applications
 
+[Docker Containers vs. Kubernetes Pods - Taking a Deeper Look](https://labs.iximiuz.com/tutorials/containers-vs-pods)
 
-## why orchestrate
-
-you will need multiple instance of your application (multiple instance of containers) and to manage them you will a tool that will manage them (orchestrate them ) which is kubernetes
-
-a container orchestration solution consists of multiple docker hosts that can hosts containers
-
-they are multiple orchestration solutions : `docker Swarm`, `kubernetes`, `mesos`
-
-## Cluster Diagram
-![](assets/Pasted%20image%2020250910085957.png)
+[Kubernetes networking: service, kube-proxy, load balancing](https://learnkube.com/kubernetes-services-and-load-balancing#externaltrafficpolicy-local-preserving-the-source-ip-in-kubernetes)
 
 
- **Control Planes :** manage the cluster and the nodes that are used to host the running applications.
- **Node :** is a VM or a physical computer where k8s software is installed (set of tools) that serves as **worker machine** in a k8s cluster. this where the containers will be launched by k8s Each node has a Kubelet.
+https://loganmarchione.com/2022/03/k3s-single-node-cluster-for-noobs/
 
- **Cluster** : is a set of nodes grouped together if one node fails you have your app accessible in other nodes.
+https://kubernetes.io/docs/reference/using-api/health-checks/
 
- **Master node** is a node with k8s controll plane components installed, the master watches over the nodes 
+[Installing the Nginx Ingress Controller on K3S](https://medium.com/@alesson.viana/installing-the-nginx-ingress-controller-on-k3s-df2c68cae3c8)
 
->The `Controller Manager` decides what needs to be done (e.g., "we need 5 pods"), and the `Kubelet` on each node is the one that actually does the work of
+## Part 3: K3d and Argo CD
 
- when installing k8s on a system you are installing the following components : 
- - API server acts as the frontend for k8s. The users , mangement devices, command line interfaces all talks to it to interact with the cluster 
- - etcd server its a key value store that stores all the data used to manage the cluster
- - kubelet service
- - Container runtime (engine like docker)
- - Controller are responsible for creating containers if a containers goes does 
- - Scheduler is responsible for distribution work or containers accross multiple nodes , it looks for newly created containers and assignes them to nodes 
- 
- **Kubelet :** an agent for managing the node and communicating with k8s control place
+- Install K3D on the virtual machine without using vagrant to create the VM.
+>You will need Docker for K3d to work, and probably some other software as well. Therefore, you must write a script to install all the necessary packages and tools during your defense.
 
+- Understand the difference between K3S and K3D
 
-**kubectl** : is the k8s cli used to deploy and manage apps on the cluster 
-- `kubectl run ` used to deploy an app  on the cluster
-- `kubectl cluster-info` view info about the cluster
-- `kubectl get nodes` list all the nodes part of the cluster  
+>k3d is a lightweight wrapper to run k3s (Rancher Lab’s minimal Kubernetes distribution) in docker.
+k3d makes it very easy to create single- and multi-node k3s clusters in docker, e.g. for local development on Kubernetes.
+
+- Create you first **continuous integration**
+
+![alt text](image.png)
 
 
-k8s can upgrade instances in a rolling fashion one at a time  and if a problem accurs you can roll back 
-**Vagrant** : A tool developed by HashiCorp that automate the provisioning of  developer environment (virtual machines, containers etc...)
+You have to create two namespaces:
+
+- The first one will be dedicated to **Argo CD**.
+- The second one will be named **dev** and will contain an application. This application will be automatically deployed by **Argo CD** using your online Github repository.
 
 
-## Vagrant Architecture
+>Yes, indeed. You will have to create a public repository on Github where you will push your configuration files.
+You are free to organize it the way you like. The only mandatory requirement is to put the login of a member of the group in the name of your repository.
 
-![](assets/Pasted%20image%2020250910081120.png)
-
-**Vagrantfile** : Configuration file that specifies how a vm should be setup
-
-`vagrant ssh-config` : display all the ssh details like username, key file location etc...
-`vagrant halt`: Stops the virtual machine by delivering a shutdown signal to the guest operating system. This command is similar to shutting down a real computer.
-
-`vagrant provision` : Changed scripts
-
-`vagrant reload` : Changed resources/network
-
-`vagrant destroy && vagrant up` : Changed box or want a clean state
-
-`server.vm.provision "shell", path: "path_to_script"` Vagrant's `shell` provisioner runs scripts with `privileged: true`. This means the script is executed as the root user using sudo within the guest virtual machine.
-
-
-`private_network`: Creates a host-only network that allows:
-- VM-to-VM communication (your K3s nodes can talk to each other)
-- Host-to-VM communication (you can SSH from your host machine to the VMs)
-- VMs are isolated from external networks (secure sandbox environment)
-
-
-`ip: "192.168.56.110"`: Assigns a static IP address
--  `192.168.56.0/24` is VirtualBox's default host-only network range
-- This ensures your VMs always get the same IP addresses across reboots
-
-`curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--token 12345 -i 192.168.56.110 " sh -s - `
-
-`-i 192.168.56.110`: Forces K3s to use this specific IP for:
-
-- API server binding (master node)
-- Node registration in the cluster
-- Inter-node communication
-
-
-
-Why is this important?
-
-- VMs typically have multiple network interfaces (NAT + private network)
-- Without -i, K3s might choose the wrong interface (like the NAT interface)
-- This ensures consistent, predictable networking
-
-
-## References
-
-
-[Vagrant Tutorial For Beginners: Getting Started Guide](https://devopscube.com/vagrant-tutorial-beginners/)
-
-[Virtualization: Bridged, NAT, Host-only - Virtual machine connection types](https://www.youtube.com/watch?v=XCkKDWMYHME&t=98s)
-
-[How to specify Internal-IP for kubernetes worker node](https://medium.com/@kanrangsan/how-to-specify-internal-ip-for-kubernetes-worker-node-24790b2884fd)
